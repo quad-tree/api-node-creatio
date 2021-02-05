@@ -1,24 +1,23 @@
 /**
+ * node-creatio-api
  * author: enrique motilla <e @ quad-tree.com>
- * date: 2020-10-26 21:03
+ * date: 2020-10-26 21:03, 
+ * 2021-02-05 14:02 last update
+ * licence MIT
+ * no warranties implied
+ * All rights reserved Quad Tree SA de CV 2021.
  */
-var dotenv = require('dotenv');
 var buildQuery = require('odata-query');
-var requestPromise = require('request-promise');
+var axios = require('axios');
 
 /** Odata Query Documentation:
  *   https://github.com/techniq/odata-query#selecting
  */
 
-dotenv.config();
-
-/** CONSTANTS */
-// const CREATIO_SERVER = 'https://myserver.com/;  // refer to .env file
-
 var Creatio = function (options) {
-    this.baseUrl = options.baseUrl;
-    this.userName = options.username;
-    this.userPassword = options.password;
+    this.server = options.server;           // http://youraccount.creatio.com
+    this.userName = options.username;       // creatio username
+    this.userPassword = options.password;   // creatio password
     this.authStr = '';
     this.bpm_csrf = '';
 
@@ -35,15 +34,17 @@ var Creatio = function (options) {
     };
     this.options = {
         'method': 'POST',
-        'url': process.env.CREATIO_SERVER + '/ServiceModel/AuthService.svc/Login',
+        'url': this.server + '/ServiceModel/AuthService.svc/Login',
         'headers': {
             'Accept': 'application/json',
             'Content-Type': 'application/json; charset=utf-8'
         },
-        transform: this._include_headers,
-        'body': JSON.stringify(bodyObj)
+        // transform: this._include_headers,
+        json: true, 
+        'data': JSON.stringify(bodyObj)
     };
 
+    // console.log(JSON.stringify(this.options));
     console.log("Creatio contructor OK");
 };
 
@@ -74,7 +75,7 @@ Creatio.prototype.parsecookie = function (setcookiearr) {
 Creatio.prototype.login = function () {
     //console.log (this.options)
     return new Promise((resolve, reject) => {
-        requestPromise(this.options)
+        axios(this.options)
             .then(response => {
                 // console.log(response.headers['set-cookie']);
                 // console.log(response.data);
@@ -107,7 +108,7 @@ Creatio.prototype.get = function (resource, paramsObj) {
     var fieldstr = (paramsObj.id && paramsObj.field ? "/" + paramsObj.field : "");
     var options = {
         method: 'GET',
-        uri: process.env.CREATIO_SERVER + '/0/odata/' + resource + idstr + fieldstr + queryStr,
+        url: this.server + '/0/odata/' + resource + idstr + fieldstr + queryStr,
         'headers': {
             'Accept': 'application/json',
             'Content-Type': 'application/json; charset=utf-8',
@@ -117,11 +118,12 @@ Creatio.prototype.get = function (resource, paramsObj) {
         json: true
     };
 
-    console.log(options.uri);
+    // console.log(options.url);
     return new Promise((resolve, reject) => {
-        requestPromise(options)
+        axios(options)
             .then(data_json => {
-                var result = data_json; //JSON.parse(data_json);
+                // console.log(JSON.stringify(data_json.data));
+                var result = data_json.data; //JSON.parse(data_json);
                 if (paramsObj.field) {
                     resolve(result.value);
                 } else {
@@ -139,7 +141,7 @@ Creatio.prototype.get = function (resource, paramsObj) {
 Creatio.prototype.insert = function (resource, object) {
     var options = {
         method: 'POST',
-        uri: process.env.CREATIO_SERVER + '/0/odata/' + resource,
+        url: this.server + '/0/odata/' + resource,
         'headers': {
             'Accept': 'application/json',
             'Content-Type': 'application/json; charset=utf-8',
@@ -147,14 +149,14 @@ Creatio.prototype.insert = function (resource, object) {
             BPMCSRF: this.bpm_csrf,
         },
         json: true,
-        body: object
+        data: object
     };
 
-    // console.log(options.uri);
+    // console.log(options.url);
     return new Promise((resolve, reject) => {
-        requestPromise(options)
+        axios(options)
             .then(data_json => {
-                resolve(data_json);
+                resolve(data_json.data);
             })
             .catch(function (err) {
                 reject(err);
@@ -171,7 +173,7 @@ Creatio.prototype.update = function (resource, id, object) {
 
     var options = {
         method: 'PATCH',
-        uri: process.env.CREATIO_SERVER + '/0/odata/' + resource + "(" + id + ")",
+        url: this.server + '/0/odata/' + resource + "(" + id + ")",
         'headers': {
             'Accept': 'application/json',
             'Content-Type': 'application/json; charset=utf-8',
@@ -179,12 +181,12 @@ Creatio.prototype.update = function (resource, id, object) {
             BPMCSRF: this.bpm_csrf,
         },
         json: true,
-        body: object
+        data: object
     };
 
-    // console.log(options.uri);
+    // console.log(options.url);
     return new Promise((resolve, reject) => {
-        requestPromise(options)
+        axios(options)
             .then(data_json => {
                 // resolve(data_json);
                 resolve({response:"ok"});
@@ -201,7 +203,7 @@ Creatio.prototype.update = function (resource, id, object) {
 Creatio.prototype.delete = function (resource, id) {
     var options = {
         method: 'DELETE',
-        uri: process.env.CREATIO_SERVER + '/0/odata/' + resource + "(" + id + ")",
+        url: this.server + '/0/odata/' + resource + "(" + id + ")",
         'headers': {
             'Accept': 'application/json',
             'Content-Type': 'application/json; charset=utf-8',
@@ -210,11 +212,11 @@ Creatio.prototype.delete = function (resource, id) {
         }
     };
 
-    // console.log(options.uri);
+    // console.log(options.url);
     return new Promise((resolve, reject) => {
-        requestPromise(options)
+        axios(options)
             .then(data_json => {
-                resolve(data_json);
+                resolve(data_json.data);
             })
             .catch(function (err) {
                 reject(err);
