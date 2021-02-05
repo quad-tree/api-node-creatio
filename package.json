@@ -1,0 +1,29 @@
+{
+  "name": "api-node-creatio",
+  "version": "0.1.1",
+  "description": "Wrapper for creatio api on node",
+  "main": "./api_creatio.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quad-tree/api-node-creatio.git"
+  },
+  "keywords": [
+    "api",
+    "node",
+    "creatio",
+    "js"
+  ],
+  "author": "Enrique Motilla",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/quad-tree/api-node-creatio/issues"
+  },
+  "homepage": "https://github.com/quad-tree/api-node-creatio#readme",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "odata-query": "^6.7.0"
+  }
+}
